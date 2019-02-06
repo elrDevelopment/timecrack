@@ -8,7 +8,8 @@ __pycache__/
 
 #vs code file
 *.code-workspace
-
+.code/
+.idea/
 # Distribution / packaging
 .Python
 build/
