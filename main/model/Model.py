@@ -1,3 +1,4 @@
+import datetime
 from flask import Flask
 from marshmallow import Schema, fields, pre_load, validate
 from flask_marshmallow import Marshmallow
@@ -15,6 +16,7 @@ class Project(db.Model):
     display_name = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=False)
     tasks = relationship('Tasks')
+    timetracking relationship('TimeTracking')
     userid = db.Column(UUID(as_uuid=True))
 
 class Tasks(db.Model):
@@ -23,17 +25,27 @@ class Tasks(db.Model):
     pubid  = db.Column(UUID(as_uuid=True), server_default= db.text("uuid_generate_v4()"), )
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'))
     sub_tasks = relationship('SubTask')
-
+    timetracking relationship('TimeTracking')
+##sub task can be specified or just an instance of when the timer is started on a task
 class SubTask(db.Model):
     __tablename__ = 'subtask'
     id = db.Column(db.Integer, autoincrement=True, primarykey=True)
     pubid  = db.Column(UUID(as_uuid=True), server_default= db.text("uuid_generate_v4()"), )
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'))
+    timetracking relationship('TimeTracking')
 
 class TimeTracking(db.Model):
     __tablename__ = 'time_tracking'
     id = db.Column(db.Integer, autoincrement=True, primarykey=True)
     pubid  = db.Column(UUID(as_uuid=True), server_default= db.text("uuid_generate_v4()"), )
+    tracking_type = db.Column(db.Integer) ##specifies what type of tracking is being stored (project = 1, task = 2, sub_task = 3)
+    start_time = dbColumn(DateTime, default=datetime.datetime.utcnow) 
+    stop_time = dbColumn(DateTime, default=datetime.datetime.utcnow)
+    description = db.Column(db.String, nullable=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'))
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'))
+    subtask_id = db.Column(db.Integer, db.ForeignKey('subtask.id'))
+    trackingid = db.Column(db.Integer) ##based on the tracking type this ties the start and 
 
 class Users(db.Model):
     __tablename__ = 'user'
@@ -52,6 +64,7 @@ class Notes(db.Model):
     __tablename__ = 'notes'
     id = db.Column(db.Integer, autoincrement=True, primarykey=True)
     pubid  = db.Column(UUID(as_uuid=True), server_default= db.text("uuid_generate_v4()"), )
+    note_type = db.Column(db.Integer) ##specifies what type of note is stored (project = 1, task = 2, sub_task = 3)
 
 
 
