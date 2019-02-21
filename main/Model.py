@@ -5,6 +5,8 @@ from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import sessionmaker, relationship
+from passlib.apps import custom_app_context as pwd_context
+
 
 ma = Marshmallow()
 db = SQLAlchemy()
@@ -54,13 +56,21 @@ class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     pubid  = db.Column(UUID(as_uuid=True), server_default= db.text("uuid_generate_v4()"), )
     auth = relationship("LocalAuth", uselist=False, back_populates="users")
+    username = db.Column(db.string(80), nullable=False)
 
 class LocalAuth(db.Model):
     __tablename__ = 'local_auth'
     id = db.Column(db.Integer, primary_key=True)
     pubid  = db.Column(UUID(as_uuid=True), server_default= db.text("uuid_generate_v4()"), )
+    password_hash = db.Column(db.String(128))
     parent_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     parent = relationship("Users", back_populates="local_auth")
+
+    def hash_password(self, password):
+        self.password_hash = pwd_context.encrypt(password)
+
+    def verify_password(self, password):
+        return pwd_context.verify(password, self.password_hash)
 
 class Notes(db.Model):
     __tablename__ = 'notes'
