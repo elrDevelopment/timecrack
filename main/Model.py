@@ -17,8 +17,8 @@ class Project(db.Model):
     __tablename__ = 'project'
     id = db.Column(db.Integer, primary_key=True)
     pubid  = db.Column(UUID(as_uuid=True), server_default= db.text("uuid_generate_v4()"), )
-    display_name = db.Column(db.String, nullable=False)
-    description = db.Column(db.String, nullable=False)
+    display_name = db.Column(db.String(256), nullable=False)
+    description = db.Column(db.Text, nullable=False)
     tasks = relationship('Tasks')
     timetracking =relationship('TimeTracking')
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -63,7 +63,7 @@ class Tasks(db.Model):
     __tablename__ = 'task'
     id = db.Column(db.Integer, primary_key=True)
     pubid  = db.Column(UUID(as_uuid=True), server_default= db.text("uuid_generate_v4()"), )
-    display_name db.Column(db.String)
+    display_name = db.Column(db.String(256))
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'))
     sub_tasks = relationship('SubTask')
     timetracking =relationship('TimeTracking')
@@ -105,15 +105,15 @@ class SubTask(db.Model):
     __tablename__ = 'subtask'
     id = db.Column(db.Integer, primary_key=True)
     pubid  = db.Column(UUID(as_uuid=True), server_default= db.text("uuid_generate_v4()"), )
-    display_name = db.Column(db.String)
+    display_name = db.Column(db.String(256))
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'))
     timetracking = relationship('TimeTracking')
 
 
     def __init__(self, data):
-    """
-    Class constructor
-    """
+        """
+        Class constructor
+        """
         self.display_name = data.get('display_name')
 
     def save(self):
@@ -212,6 +212,40 @@ class Notes(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     pubid  = db.Column(UUID(as_uuid=True), server_default= db.text("uuid_generate_v4()"), )
     note_type = db.Column(db.Integer) ##specifies what type of note is stored (project = 1, task = 2, sub_task = 3)
+    note_text = db.Column(db.Text)
+
+    def __init__(self, data):
+        """
+        Class constructor
+        """
+        self.note_text = data.get('note_test')
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def update(self, data):
+        for key, item in data.items():
+            setattr(self, key, item)
+       
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    @staticmethod
+    def get_all():
+        return Tasks.query.all()
+
+    @staticmethod
+    def get_one(id):
+        return Tasks.query.get(id)
+
+
+    def __repr(self):
+        return '<id {}>'.format(self.id)
+
 
 
 class ProjectSchema(ma.ModelSchema):
